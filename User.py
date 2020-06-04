@@ -1,7 +1,10 @@
 # -*- coding: UTF-8 -*-
 import ssl
-from pysphere import VIServer
 import paramiko
+import sys, re, getpass, argparse, subprocess
+from time import sleep
+from pysphere import MORTypes, VIServer, VITask, VIProperty, VIMor, VIException
+from pysphere.vi_virtual_machine import VIVirtualMachine
 
 class User():
 	server_ip = ""
@@ -12,8 +15,14 @@ class User():
 	vm = "" #当前虚拟机的实例
 	vm_name = "" #当前虚拟机名称
 	vm_os = ""
+
+	ssh = "" #SSH连接对象
 	#def __init__(self):
-		
+
+
+	def print_verbose(self,message):
+		print message
+
 	#连接ESXI
 	def connect_server(self,host,user,passwd):
 		self.server_ip=host
@@ -37,27 +46,54 @@ class User():
 			print "error!!"
 			return False
 		return True
-	#ESXI远程控制-SSH
+	
+
+	# 建立SSH连接
+	def SSH_connect(self):
+		try:
+			# 建立一个sshclient对象
+			self.ssh = paramiko.SSHClient()
+			# 允许将信任的主机自动加入到host_allow 列表，此方法必须放在connect方法的前面
+			self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+			# 调用connect方法连接服务器
+			# 需要管理员账号
+			self.ssh.connect(hostname=self.server_ip, port=22, username=self.user_name, password=self.password)
+			return True
+		except:
+			return False
+	# 关闭连接
+	def SSH_disconnect(self):
+		try:
+			self.ssh.close()
+			return True
+		except:
+			return False
+	#SSH远程执行CMD命令
 	def command_server(self,cmd):
-		# 建立一个sshclient对象
-		ssh = paramiko.SSHClient()
-		# 允许将信任的主机自动加入到host_allow 列表，此方法必须放在connect方法的前面
-		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-		# 调用connect方法连接服务器
-		# 需要管理员账号
-		ssh.connect(hostname=self.server_ip, port=22, username=self.user_name, password=self.password)
-		# 执行命令
-		# command="poweroff"
-		stdin, stdout, stderr = ssh.exec_command(cmd)
-		# 结果放到stdout中，如果有错误将放到stderr中
-		print stdout.read().decode()
-		print 'ok'
-		# 关闭连接
-		ssh.close()
+		try:
+			self.SSH_connect()
+			# 执行命令
+			# stdin, stdout, stderr = self.ssh.exec_command(cmd)
 
-		return True
-
-
+			self.ssh.exec_command(cmd)
+			# 执行命令后SSH马上断开了，如何查看指令执行进度？？
+			
+			self.SSH_disconnect()
+			# 结果放到stdout中，如果有错误将放到stderr中
+			print ">>>"+cmd
+			# print stdout.read().decode()
+			print 'done'
+			
+			return True
+		except:
+			return False
+	#克隆 通过SSH执行CMD复制服务器上的虚拟机文件 指定模板虚拟机所在文件夹名称 和 克隆虚拟机文件夹名称
+	def vm_clone(self,template,vm_name):# 默认 datastore1
+		try:
+			self.command_server("cp -r /vmfs/volumes/datastore1/"+template+"/ "+"/vmfs/volumes/datastore1/"+vm_name+"/")
+			return True
+		except:
+			return False
 
 	#当前所有虚拟机list
 	def get_vm_list(self):
@@ -66,15 +102,34 @@ class User():
 		except:
 			print "Failure!!!"
 			return False
+	
+	''' 
 	#获取数据存储list
 	def get_datastores(self):
-	    ret = []
-	    for d in self.host_config.Datastore:
-	        if d.Datastore.Accessible:
-	            ret.append(d.Datastore.Name)
-	    logger.debug("%s:found %s datastores", __name__, len(ret))
-	    return ret
-
+		pass
+	#获取所有资源池
+	def find_resource_pool(self):
+		rps = self.server.get_resource_pools()
+		ans = []
+		for mor, path in rps.iteritems():
+			self.print_verbose('Parsing RP %s' % path)
+			#if re.match('.*%s' % name,path):
+			ans.append(mor)
+		return mor
+	#获取所有文件夹
+	def find_folder(self):
+		folders = self.server._get_managed_objects(MORTypes.Folder)
+		ans = []
+		try:
+			for mor, folder_name in folders.iteritems():
+				self.print_verbose('Parsing folder %s' % folder_name)
+				#if folder_name == name:
+				ans.append(mor)
+			return ans
+		except IndexError:
+			return None
+		return None
+	'''
 
 	#获取指定名称的虚拟机实例
 	def get_vm_by_name(self,vm_name):
@@ -126,69 +181,8 @@ class User():
 		except:
 			return False
 	#挂起   suspend()
-
-
-
-	''' 克隆虚拟机，ip配置 '''
-	'''https://qiita.com/eli/items/f2438a45f06cf3813b9a'''
-	def clone_vm(content, template, vm_name,
-	             power_on=True,
-	             vm_ip=None, vm_subnetmask=None, vm_gateway=None, vm_domain=None,
-	             vm_hostname=None):
-	    """
-	    从模板/虚拟机来克隆虚拟机。
-	    数据中心名称，目标虚拟机文件夹，数据存储名称，
-	    集群名称，资源池，是否自动开机均为可选项
-	    """
-	    datacenter = get_obj(content, [vim.Datacenter], datacenter_name)
-	 
-	    relospec = vim.vm.RelocateSpec()
-	    relospec.datastore = datastore
-	    relospec.pool = resource_pool
-	 
-	    clonespec = vim.vm.CloneSpec()
-	    clonespec.location = relospec
-	    clonespec.powerOn = power_on
-	    if all([vm_ip, vm_subnetmask, vm_gateway, vm_domain]):
-	        clonespec.customization = get_customspec(vm_ip, vm_subnetmask, vm_gateway, vm_domain, vm_hostname)
-	    elif any([vm_ip, vm_subnetmask, vm_gateway, vm_domain]):
-	        raise CheckError('虚拟机的IP、子网掩码、网关、DNS域必须同时提供')
-	 
-	    print '开始克隆虚拟机'
-	    task = template.Clone(folder=destfolder, name=vm_name, spec=clonespec)
-	    wait_for_task(task)
-	 
-	 
-	def get_customspec(vm_ip=None, vm_subnetmask=None, vm_gateway=None,
-	                   vm_domain=None, vm_hostname=None):
-	    # guest NIC settings
-	    adaptermaps = []
-	    guest_map = vim.vm.customization.AdapterMapping()
-	    guest_map.adapter = vim.vm.customization.IPSettings()
-	    guest_map.adapter.ip = vim.vm.customization.FixedIp()
-	    guest_map.adapter.ip.ipAddress = vm_ip
-	    guest_map.adapter.subnetMask = vm_subnetmask
-	    guest_map.adapter.gateway = vm_gateway
-	    guest_map.adapter.dnsDomain = vm_domain
-	    adaptermaps.append(guest_map)
-	 
-	    # DNS settings
-	    globalip = vim.vm.customization.GlobalIPSettings()
-	    globalip.dnsServerList = [vm_gateway]
-	    globalip.dnsSuffixList = vm_domain
-	 
-	    # Hostname settings
-	    ident = vim.vm.customization.LinuxPrep()
-	    ident.domain = vm_domain
-	    ident.hostName = vim.vm.customization.FixedName()
-	    if vm_hostname:
-	        ident.hostName.name=vm_hostname
-	        #ident.hostName.name = vm_hostname
-	    customspec = vim.vm.customization.Specification()
-	    customspec.nicSettingMap = adaptermaps
-	    customspec.globalIPSettings = globalip
-	    customspec.identity = ident
-	    return customspec
+	def vm_suspend(self):
+		pass
  
 
 
