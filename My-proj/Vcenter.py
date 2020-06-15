@@ -7,6 +7,7 @@ import atexit
 import argparse
 import getpass
 import traceback
+from os import system, path
 
 # vcenter 虚拟机管理API
 class Vcenter():
@@ -48,6 +49,7 @@ class Vcenter():
         obj = None
         container = self.content.viewManager.CreateContainerView(
             self.content.rootFolder, vimtype, True)
+        #不指定name返回所有结果
         if name == None:
             return container.view
         for c in container.view:
@@ -61,6 +63,7 @@ class Vcenter():
 
         return obj
 
+
     #关闭ESXI服务器, name是ESXI服务器的ip
     def ESXI_Shutdown(self,name):
         esxi_obj_all = self.get_obj([vim.HostSystem],None)
@@ -73,6 +76,83 @@ class Vcenter():
         #print(esxi.name)
         #print(dir(esxi))
             
+    
+    ''' ovf模板机部署 '''
+    def get_ovf_descriptor(self,ovf_path):
+        """
+        Read in the OVF descriptor.
+        """
+        if path.exists(ovf_path):
+            with open(ovf_path, 'r') as f:
+                try:
+                    ovfd = f.read()
+                    f.close()
+                    return ovfd
+                except:
+                    print("Could not read file: %s" % ovf_path)
+                    exit(1)
+        else:
+            print("路径不存在")
+    def get_obj_in_list(self,obj_name, obj_list):
+        """
+        Gets an object out of a list (obj_list) whos name matches obj_name.
+        """
+        for o in obj_list:
+            if o.name == obj_name:
+                return o
+        print("Unable to find object by the name of %s in list:\n%s" %
+            (obj_name, map(lambda o: o.name, obj_list)))
+        exit(1)
+    def get_objects(self, datacenter_name, datastore_name, cluster_name):
+        """
+        Return a dict containing the necessary objects for deployment.
+        """
+        # Get datacenter object.
+        datacenter_list = self.si.content.rootFolder.childEntity
+        if datacenter_name:
+            datacenter_obj = self.get_obj_in_list(datacenter_name, datacenter_list)
+        else:
+            datacenter_obj = datacenter_list[0]
+
+        # Get datastore object.
+        datastore_list = datacenter_obj.datastoreFolder.childEntity
+        if datastore_name:
+            datastore_obj = self.get_obj_in_list(datastore_name, datastore_list)
+        elif len(datastore_list) > 0:
+            datastore_obj = datastore_list[0]
+        else:
+            print("No datastores found in DC (%s)." % datacenter_obj.name)
+
+        # Get cluster object.
+        cluster_list = datacenter_obj.hostFolder.childEntity
+        if cluster_name:
+            cluster_obj = self.get_obj_in_list(cluster_name, cluster_list)
+        elif len(cluster_list) > 0:
+            cluster_obj = cluster_list[0]
+        else:
+            print("No clusters found in DC (%s)." % datacenter_obj.name)
+
+        # Generate resource pool.
+        resource_pool_obj = cluster_obj.resourcePool
+
+        return {"datacenter": datacenter_obj,
+                "datastore": datastore_obj,
+                "resource pool": resource_pool_obj}
+    #模板机部署
+    def deploy_ovf(self,path):
+        ovfd = self.get_ovf_descriptor(path)
+        #print(ovfd)
+        objs = self.get_objects("Datacenter1","datastore1","cluster1")
+        manager = self.si.content.ovfManager
+        spec_params = vim.OvfManager.CreateImportSpecParams()
+        import_spec = manager.CreateImportSpec(ovfd,
+                                            objs["resource pool"],
+                                            objs["datastore"],
+                                            spec_params)
+        lease = objs["resource pool"].ImportVApp(import_spec.importSpec,
+                                            objs["datacenter"].vmFolder)
+            
+
 
     # 获取所有虚拟机信息
     def get_all_vm_list(self):
@@ -80,6 +160,7 @@ class Vcenter():
         for c in vm_list:
             print(c.name)
 
+    #配置网络！！！
     def get_customspec(self, vm_ip=None, vm_subnetmask=None, vm_gateway=None, vm_dns=None,
                         vm_domain=None, vm_hostname=None):
         # guest NIC settings  有关dns和域名的配置错误 更改了
@@ -97,11 +178,12 @@ class Vcenter():
         # DNS settings
         globalip = vim.vm.customization.GlobalIPSettings()
         if vm_dns:
-            globalip.dnsServerList = [vm_dns]
+            globalip.dnsServerList = [vm_dns]  #报错，注释
             globalip.dnsSuffixList = vm_domain
         
         # Hostname settings
-        ident = vim.vm.customization.LinuxPrep()
+        ident = vim.vm.customization.LinuxPrep() #win7需要更换方法
+        # ident = vim.vm.customization.WindowsPrep()
         if vm_domain:
             ident.domain = vm_domain
         ident.hostName = vim.vm.customization.FixedName()
@@ -189,8 +271,8 @@ class Vcenter():
         clonespec.powerOn = power_on
 
         # ip配置
-        if all([vm_ip, vm_subnetmask, vm_gateway]):
-            clonespec.customization = self.get_customspec(vm_ip, vm_subnetmask, vm_gateway, vm_domain, vm_dns, vm_hostname)
+        if all([vm_ip, vm_subnetmask, vm_gateway, vm_domain,vm_dns]):
+            clonespec.customization = self.get_customspec(vm_ip, vm_subnetmask, vm_gateway, vm_dns, vm_domain, vm_hostname)
         vmconf = vim.vm.ConfigSpec()
         if cup_num:
             vmconf.numCPUs = cup_num
@@ -211,7 +293,8 @@ class Vcenter():
             return False
         return True
     
-    # 虚拟机电源管理
+
+    ''' 虚拟机电源管理 '''
     def vm_poweron(self,vm):
         try:
             vm.PowerOn()
@@ -230,4 +313,5 @@ class Vcenter():
         except:
             return False
         return True
+
 
