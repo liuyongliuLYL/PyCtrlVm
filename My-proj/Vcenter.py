@@ -171,6 +171,7 @@ class Vcenter():
         guest_map.adapter.ip.ipAddress = vm_ip
         guest_map.adapter.subnetMask = vm_subnetmask
         guest_map.adapter.gateway = vm_gateway
+        print(guest_map.adapter.gateway)
         if vm_domain:
             guest_map.adapter.dnsDomain = vm_domain
         adaptermaps.append(guest_map)

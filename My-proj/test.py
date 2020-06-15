@@ -34,9 +34,9 @@ P=Vcenter(host,user,pwd,443)
 
 # 克隆成功，
 # ip配置失败!!! 
-template = P.get_obj([vim.VirtualMachine],'ubuntu16')
-P.clone_vm(template=template,vm_name='ubuntu16_clone1',datacenter_name='Datacenter1',vm_folder="demo1",datastore_name='datastore1',cluster_name='cluster1',resource_pool=None,power_on=True,datastorecluster_name='None',
-   vm_conf=conf['vm1'])
+#template = P.get_obj([vim.VirtualMachine],'ubuntu16')
+#P.clone_vm(template=template,vm_name='ubuntu16_clone1',datacenter_name='Datacenter1',vm_folder="demo1",datastore_name='datastore1',cluster_name='cluster1',resource_pool=None,power_on=True,datastorecluster_name='None',
+#   vm_conf=conf['vm1'])
 
 '''
  #删除虚拟机 成功
@@ -48,8 +48,9 @@ P.get_all_vm_list()
 '''
 
 # 关闭ESXI 成功
-#P.ESXI_Shutdown('192.168.1.212')
-
+P.ESXI_Shutdown('192.168.1.210')
+P.ESXI_Shutdown('192.168.1.212')
+P.ESXI_Shutdown('192.168.1.216')
 # 获取虚拟机详细信息
 #vm = P.get_obj([vim.VirtualMachine],'win7')
 #print(vm.summary.config)
