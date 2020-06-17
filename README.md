@@ -13,9 +13,9 @@
     * 批量删除虚拟机界面
     * 展示每个ESXI主机当前状态(CPU,内存利用率),可进行关机操作
     * ...
-    ### GUI_demo2
-    ![demo2](/GUI/demo2.png)
-    ![demo2_](/GUI/demo2_.png)
+    ### GUI_final
+    ![final](/GUI/final.png)
+
 
 
 ***
