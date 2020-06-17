@@ -35,7 +35,7 @@ P=Vcenter(host,user,pwd,443)
 # 克隆成功，
 # ip配置失败!!! 
 template = P.get_obj([vim.VirtualMachine],'ubuntu16')
-P.clone_vm(template=template,vm_name='ubuntu16_8',datacenter_name='Datacenter1',vm_folder="demo1",datastore_name='datastore1',cluster_name='cluster1',resource_pool=None,power_on=True,datastorecluster_name='None',
+P.clone_vm(template=template,vm_name='ubuntu16-i',datacenter_name='Datacenter1',vm_folder="demo1",datastore_name='datastore1',cluster_name='cluster1',resource_pool=None,power_on=True,datastorecluster_name='None',
    vm_conf=conf['vm1'])
 
 '''

@@ -1,9 +1,11 @@
+import time
 from tkinter import *
 from tkinter import messagebox
 from tkinter.simpledialog import askinteger
 
 from tkinter import *
-#from Vcenter import Vcenter
+sys.path.append("API")
+from Vcenter import Vcenter
 from pyVmomi import vim
 from pyVmomi import vmodl
 # from tools import tasks
@@ -14,15 +16,13 @@ import getpass
 import traceback
 from os import system, path
 
-sys.path.append("API")
-from Vcenter import Vcenter
 
 class GUI():
     def __init__(self):
         host = "192.168.1.233"
         user = "administrator@vsphere.local"
         pwd = "Cloud$2020"
-        port = 433
+        port = 443
         self.P = Vcenter(host, user, pwd, 443)
 
         # 初始化Tk()
@@ -30,8 +30,8 @@ class GUI():
         # 设置标题
         self.myWindow.title("虚拟中心管理系统")
         # 设置窗口大小
-        self.width = 1000
-        self.height = 600
+        self.width = 800
+        self.height = 800
         # 获取屏幕尺寸以计算布局参数，使窗口居于屏幕中央
         self.screenwidth = self.myWindow.winfo_screenwidth()
         self.screenheight = self.myWindow.winfo_screenheight()
@@ -54,8 +54,7 @@ class GUI():
         # 包含所有的按钮
         self.all_buttons()
 
-        self.xls_text = StringVar()
-        self.xls = Entry(self.myWindow, textvariable=self.xls_text)
+        self.all_info = self.esxi_detail_info()
 
         # 进入消息循环
         self.myWindow.mainloop()
@@ -72,39 +71,44 @@ class GUI():
         self.l3.grid(row=0, column=2)
 
         self.l4 = Label(self.myWindow, text="单个VM详细信息", width=20, justify="center")
-        self.l4.grid(row=0, column=3)
+        self.l4.grid(row=3, column=0, columnspan='3')
 
     # 包含所有的按钮
     def all_buttons(self):
         # 虚拟机有关操作
         self.b1 = Button(self.myWindow, text='批量部署虚拟机', relief='raised', font=('Helvetica 10 bold'), width=20, height=2,
                          command=self.deploy)
-        self.b1.grid(row=3, column=0, sticky=W, padx=5, pady=5)
+        self.b1.grid(row=6, column=0, sticky=W, padx=5, pady=5)
 
         self.b2 = Button(self.myWindow, text='删除虚拟机', font=('Helvetica 10 bold'), width=20, height=2,
                          command=self.delete_vm)
-        self.b2.grid(row=4, column=0, sticky=W, padx=5, pady=5)
+        self.b2.grid(row=7, column=0, sticky=W, padx=5, pady=5)
 
         self.b3 = Button(self.myWindow, text='虚拟机开机', relief='raised', font=('Helvetica 10 bold'), width=20, height=2,
                          command=self.poweron)
-        self.b3.grid(row=3, column=2, sticky=W, padx=5, pady=5)
+        self.b3.grid(row=6, column=2, sticky=W, padx=5, pady=5)
 
         self.b4 = Button(self.myWindow, text='虚拟机关机', relief='raised', font=('Helvetica 10 bold'), width=20, height=2,
                          command=self.poweroff)
-        self.b4.grid(row=4, column=2, sticky=W, padx=5, pady=5)
+        self.b4.grid(row=7, column=2, sticky=W, padx=5, pady=5)
 
         self.b5 = Button(self.myWindow, text='虚拟机重启', relief='raised', font=('Helvetica 10 bold'), width=20, height=2,
                          command=self.reboot)
-        self.b5.grid(row=3, column=1, sticky=W, padx=5, pady=5)
+        self.b5.grid(row=6, column=1, sticky=W, padx=5, pady=5)
 
         self.b6 = Button(self.myWindow, text='虚拟机的详细信息', relief='raised', font=('Helvetica 10 bold'), width=20,
                          height=2)
-        self.b6.grid(row=4, column=1, sticky=W, padx=5, pady=5)
+        self.b6.grid(row=7, column=1, sticky=W, padx=5, pady=5)
 
         # ESXI有关操作
         self.b7 = Button(self.myWindow, text='关闭ESXI', relief='raised', font=('Helvetica 10 bold'), width=20, height=2,
                          command=self.shutdown)
-        self.b7.grid(row=5, column=0, sticky=W, padx=5, pady=5)
+        self.b7.grid(row=8, column=0, sticky=W, padx=5, pady=5)
+
+        # 刷新操作
+        self.b8 = Button(self.myWindow, text='刷新列表', relief='raised', font=('Helvetica 10 bold'), width=20, height=2,
+                         command=self.refresh)
+        self.b8.grid(row=8, column=1, sticky=W, padx=5, pady=5)
 
     # esxi列表
     def esxi_list(self):
@@ -132,7 +136,7 @@ class GUI():
         self.vms_info.grid(row=1, column=2, sticky="N")
         self.vm_list = self.P.get_all_vm_list()
         for vm in self.vm_list:
-            self.vms_info.insert(END, self.P.get_obj([vim.VirtualMachine], vm.name).summary.config)
+            self.vms_info.insert(END, self.P.get_obj([vim.VirtualMachine], vm).summary.config)
 
         scr3 = Scrollbar(self.myWindow, orient='vertical')
         self.vms_info.configure(yscrollcommand=scr3.set)
@@ -165,27 +169,22 @@ class GUI():
 
     # 单个VM详细信息
     def vm_detail_info_list(self):
-        self.vm_info = Listbox(self.myWindow)
-        self.vm_info.grid(row=1, column=3, sticky=N)
+        self.vm_info = Listbox(self.myWindow, width=110)
+        self.vm_info.grid(row=4, column=0, sticky=N, columnspan=3)
 
         scr7 = Scrollbar(self.myWindow, orient='vertical')
         self.vm_info.configure(yscrollcommand=scr7.set)
         scr7['command'] = self.vm_info.yview
-        scr7.grid(row=1, column=3, sticky="E" + "N" + "S")
+        scr7.grid(row=4, column=0, sticky="E" + "N" + "S", columnspan=3)
 
         src8 = Scrollbar(self.myWindow, orient="horizontal")
         self.vm_info.configure(xscrollcommand=src8.set)
         src8["command"] = self.vm_info.xview
-        src8.grid(row=2, column=3, sticky="S" + "E" + "W")
+        src8.grid(row=5, column=0, sticky="S" + "E" + "W", columnspan=3)
 
     # 批量部署虚拟机
     def deploy(self):
         total_num = askinteger('部署虚拟机', "需要部署的虚拟机数量：")
-
-        # read from local 。原始的本地存在模板机的信息
-        f = open("D:\\conf.txt", 'r')
-        conf = eval(f.read())
-        f.close()
 
         while total_num > 0:
             # 因为当前只有两个esxi，所以平均分配到每个esxi
@@ -193,10 +192,12 @@ class GUI():
                 get_datastore = 'datastore1'
             else:
                 get_datastore = 'datastore3'
-            get_name = 'ubuntu16_' + str(total_num)
+
+            get_name = 'ubuntu16-' + str(total_num)
             get_ip = '192.168.1.' + str(130 + total_num)
 
             # 往字典中加入新的虚拟机的配置
+            conf = {}
             conf[get_name] = {
                 'cup_num': 2,
                 'memory': 2048,
@@ -207,25 +208,36 @@ class GUI():
                 'vm_dns': '114.114.114.114',
                 'vm_domain': 'localhost',
                 'vm_hostname': get_name,
-
-                'datastore': get_datastore
             }
+
             # 根据模板，并且读取保存在本地的新的虚拟机的配置信息，进行虚拟机的（克隆）部署
             template = self.P.get_obj([vim.VirtualMachine], 'ubuntu_tem')
-            self.P.clone_vm(template=template, vm_name=get_name,
-                            datacenter_name='Datacenter1', vm_folder="demo1",
-                            datastore_name=get_datastore, cluster_name='cluster1',
-                            resource_pool=None,
-                            power_on=True,
-                            datastorecluster_name='None',
-                            vm_conf=conf['ubuntu_tem'])
+            task = self.P.clone_vm(template=template, vm_name=get_name,
+                                   datacenter_name='Datacenter1', vm_folder="demo1",
+                                   datastore_name=get_datastore, cluster_name='cluster1',
+                                   resource_pool=None,
+                                   power_on=True,
+                                   datastorecluster_name='None',
+                                   vm_conf=conf[get_name])
+            # while 1:
+            #     if self.P.wait_for_task(task) == "wait":
+            #         print('wait')
+            #     if self.P.wait_for_task(task) == "success":
+            #         print('success')
+            #         break
+            #     if self.P.wait_for_task(task) == "error":
+            #         print('error')
+            #         break
+            #     time.sleep(1)
 
+            print(conf[get_name])
             total_num -= 1
 
-        # save to local
-        f = open("D:\\conf.txt", 'w')
-        f.write(str(conf))
-        f.close()
+    def refresh(self):
+        self.esxi_list()
+        self.all_vm_list()
+        self.all_vm_general_info_list()
+        self.vm_detail_info_list()
 
     def poweron(self):
         test = self.vm_lb.curselection()  # 返回一个元组
@@ -261,6 +273,9 @@ class GUI():
             value = self.vmm_lb.get(tup)
             vm = self.P.get_obj([vim.VirtualMachine], value)
             self.P.ESXI_Shutdown(value)
+
+    def esxi_detail_info(self):
+        return self.P.get_esxi_info()
 
 
 if __name__ == '__main__':

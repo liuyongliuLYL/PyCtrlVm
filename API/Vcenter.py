@@ -81,7 +81,7 @@ class Vcenter():
         vm_list = self.get_obj([vim.VirtualMachine], None)
         list1 = []
         for c in vm_list:
-            list1.append(c)
+            list1.append(c.name)
         return list1
 
 
