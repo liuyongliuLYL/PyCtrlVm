@@ -40,6 +40,7 @@ class Vcenter():
             if task.info.state == 'error':
                 print("there was an error")
                 task_done = True
+            #print("wait...")
     
     def get_obj(self, vimtype, name):
         """
@@ -76,7 +77,14 @@ class Vcenter():
         #print(esxi.name)
         #print(dir(esxi))
             
-    
+    def get_all_vm_list(self):
+        vm_list = self.get_obj([vim.VirtualMachine], None)
+        list1 = []
+        for c in vm_list:
+            list1.append(c)
+        return list1
+
+
     ''' ovf模板机部署 '''
     def get_ovf_descriptor(self,ovf_path):
         """
@@ -152,7 +160,7 @@ class Vcenter():
         lease = objs["resource pool"].ImportVApp(import_spec.importSpec,
                                             objs["datacenter"].vmFolder)
 
-    #配置网络！！！
+    #克隆时配置网络！！！
     def get_customspec(self, vm_ip=None, vm_subnetmask=None, vm_gateway=None, vm_dns=None,
                         vm_domain=None, vm_hostname=None):
         # guest NIC settings  有关dns和域名的配置错误 更改了
@@ -267,11 +275,13 @@ class Vcenter():
         if all([vm_ip, vm_subnetmask, vm_gateway, vm_domain,vm_dns]):
             clonespec.customization = self.get_customspec(vm_ip = vm_ip, vm_subnetmask = vm_subnetmask, vm_gateway = vm_gateway, vm_dns = vm_dns, vm_domain = vm_domain, vm_hostname = vm_hostname)
 
+        # 获取配置的快照信息
         vmconf = vim.vm.ConfigSpec()
         if cup_num:
             vmconf.numCPUs = cup_num
         if memory:
             vmconf.memoryMB = memory
+        # 更新配置
         if vmconf is not None:
             clonespec.config = vmconf
 
@@ -279,6 +289,10 @@ class Vcenter():
         task = template.Clone(folder=destfolder, name=vm_name, spec=clonespec)
         self.wait_for_task(task)
     
+    # 修改网络配置
+    def change_vm_vif(self):
+        pass
+
     # 删除虚拟机  需要先关闭电源
     def delete_vm(self,vm):
         try:
@@ -309,15 +323,18 @@ class Vcenter():
         return True
 
 
-    ''' 监控 （未测试） '''
+    ''' 监控 '''
     #获取exsi的硬件资源信息和vmware客户端的硬件分配信息,   返回一个字典
     def get_esxi_info(self):
         # 参考 https://www.cnblogs.com/reblue520/p/9643626.html
         esxi_host = {} #所有主机信息
         esxi_obj = self.get_obj(vimtype = [vim.HostSystem],name = None)
+        #print(esxi_obj[1].summary.hardware)
+        
         for esxi in esxi_obj:
             esxi_host[esxi.name] = {'esxi_info':{},'datastore':{}, 'network': {}, 'vm': {}}
 
+            ''' hardware '''
             esxi_host[esxi.name]['esxi_info']['厂商'] = esxi.summary.hardware.vendor
             esxi_host[esxi.name]['esxi_info']['型号'] = esxi.summary.hardware.model
             for i in esxi.summary.hardware.otherIdentifyingInfo:
@@ -345,6 +362,7 @@ class Vcenter():
                 esxi_host[esxi.name]['network'][nt.name]['标签ID'] = nt.name
             for vm in esxi.vm:
                 esxi_host[esxi.name]['vm'][vm.name] = {}
+                print(vm.name)
                 esxi_host[esxi.name]['vm'][vm.name]['电源状态'] = vm.runtime.powerState
                 esxi_host[esxi.name]['vm'][vm.name]['CPU(内核总数)'] = vm.config.hardware.numCPU
                 esxi_host[esxi.name]['vm'][vm.name]['内存(总数MB)'] = vm.config.hardware.memoryMB
@@ -357,8 +375,9 @@ class Vcenter():
                 for d in vm.config.hardware.device:
                     if isinstance(d, vim.vm.device.VirtualDisk):
                         esxi_host[esxi.name]['vm'][vm.name][d.deviceInfo.label] = str((d.capacityInKB)/1024/1024) + ' GB'
-
+        
         return esxi_host
 
-
+if __name__ == "__main__":
+    pass
 

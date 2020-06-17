@@ -1,0 +1,41 @@
+
+{'192.168.1.216': 
+    {   'esxi_info': 
+        {'厂商': 'Dell Inc.', 
+         '型号': 'OptiPlex 7070-China HDD Protection', 
+         'SN': '27[4287882135]', 
+         '处理器': '数量：1 核数：6 线程数：6 频率：3000(Intel(R) Core(TM) i5-9500 CPU @ 3.00GHz) ', 
+         '处理器使用率': '0.1%', 
+         '内存(MB)': 32549.86328125, 
+         '可用内存(MB)': '30985.9 MB', 
+         '内存使用率': '4.8%', 
+         '系统': 'VMware ESXi 6.7.0 build-15160138'
+        }, 
+
+        'datastore': 
+        {'datastore3': {'总容量(G)': 924, '空闲容量(G)': 618, '类型': 'VMFS'} }, 
+
+        'network': 
+        { 'VM Network': {'标签ID': 'VM Network'} }, 
+
+        'vm': { 'test2 (1)': {'电源状态': 'poweredOff', 'CPU(内核总数)': 1, '内存(总数MB)': 16, '系统信息': 'Microsoft MS-DOS', 'IP': '服务器需要开机后才可以获取', 'Hard disk 1': '2.0 GB'}, 
+                'afasfas-0': {'电源状态': 'poweredOff', 'CPU(内核总数)': 1, '内存(总数MB)': 512, '系统信息': 'Other 2.6.x Linux (64-bit)', 'IP': '服务器需要开机后才可以获取', 'Hard disk 1': '1.0 GB'}, 
+                'VMware vCenter Server Appliance (1)': {'电源状态': 'poweredOff', 'CPU(内核总数)': 2, '内存(总数MB)': 10240, '系统信息': 'Other 3.x Linux (64-bit)', 'IP': '服务器需要开机后才可以获取', 'Hard disk 1': '12.0 GB', 'Hard disk 2': '1.8447265625 GB', 'Hard disk 3': '25.0 GB', 'Hard disk 4': '25.0 GB', 'Hard disk 5': '10.0 GB', 'Hard disk 6': '10.0 GB', 'Hard disk 7': '15.0 GB', 'Hard disk 8': '10.0 GB', 'Hard disk 9': '1.0 GB', 'Hard disk 10': '10.0 GB', 'Hard disk 11': '10.0 GB', 'Hard disk 12': '100.0 GB', 'Hard disk 13': '50.0 GB'}, 
+                'ubuntu16_clone10': {'电源状态': 'poweredOff', 'CPU(内核总数)': 2, '内存(总数MB)': 2048, '系统信息': 'Ubuntu Linux (64-bit)', 'IP': '服务器需要开机后才可以获取', 
+'Hard disk 1': '40.0 GB'}, 
+                '测试': {'电源状态': 'poweredOff', 'CPU(内核总数)': 1, '内存(总数MB)': 16, '系统信息': 'Microsoft MS-DOS', 'IP': '服务器需要开机后才可以获取', 'Hard disk 1': '2.0 GB'}, 
+                'winxp-0': {'电源状态': 'poweredOff', 'CPU(内核总数)': 1, '内存(总数MB)': 256, '系统信息': 'Microsoft Windows XP Professional (64-bit)', 'IP': '服务器需要开机后才可以获取', 'Hard disk 1': '8.0 GB'}, 
+                'ubuntu16_clone_tem': {'电源状态': 'poweredOff', 'CPU(内核总数)': 2, '内存(总数MB)': 2048, '系统信息': 'Ubuntu Linux (64-bit)', 'IP': '服务器需要开机后才可以获取', 'Hard disk 1': '40.0 GB'}
+            }
+}, 
+
+
+
+
+
+
+'''
+
+'192.168.1.210': {'esxi_info': {'厂商': 'Dell Inc.', '型号': 'OptiPlex 7070-China HDD Protection', 'SN': '27[4423977687]', '处理器': '数量：1 核数：6 线程数：6 频率：3000(Intel(R) Core(TM) i5-9500 CPU @ 3.00GHz) ', '处理器使用率': '1.9%', '内存(MB)': 32549.86328125, '可用内存(MB)': '21441.9 MB', '内存使用率
+': '34.1%', '系统': 'VMware ESXi 6.7.0 build-15160138'}, 'datastore': {'datastore1': {'总容量(G)': 924, '空闲容量(G)': 845, '类型': 'VMFS'}}, 'network': {'VM Network': {'标签ID': 'VM Network'}}, 'vm': {'VMware vCenter Server Appliance': {'电源状态': 'poweredOn', 'CPU(内核总数)': 2, '内存(总数MB)': 10240, '系统信息': 'Other 3.x Linux (64-bit)', 'IP': '192.168.1.233', 'Hard disk 1': '12.0 GB', 'Hard disk 2': '1.8447265625 GB', 'Hard disk 3': '25.0 GB', 'Hard disk 4': '25.0 GB', 'Hard disk 5': '10.0 GB', 'Hard disk 6': '10.0 GB', 'Hard disk 7': '15.0 GB', 'Hard disk 8': '10.0 GB', 'Hard disk 9': '1.0 GB', 'Hard disk 10': '10.0 GB', 'Hard disk 11': '10.0 GB', 'Hard disk 12': '100.0 GB', 'Hard disk 13': '50.0 GB'}, 'ubuntu16_clone': {'电源状态': 'poweredOff', 'CPU(内核总数)': 2, '内存(总数MB)': 2048, '系统信息': 'Ubuntu Linux (64-bit)', 'IP': '服务器需要开机后才可以获取', 'Hard disk 1': '40.0 GB'}, 'ubuntu_tem': {'电源状态': 'poweredOff', 'CPU(内核总数)': 2, '内存(总数MB)': 2048, '系统信息': 'Ubuntu Linux (64-bit)', 'IP': '服务器需要开机后才可以获取', 'Hard disk 1': '40.0 GB'}, 'test-whr': {'电源状态': 'poweredOff', 'CPU(内核总数)': 2, '内存(总数MB)': 2048, '系统信息': 'Ubuntu Linux (64-bit)', 'IP': '服务器需要开机后才可以获取', 'Hard disk 1': '40.0 GB'}, 'win7': {'电源状态': 'poweredOff', 'CPU(内核总数)': 2, '内存(总数MB)': 2048, '系统信息': 'Microsoft Windows 7 (64-bit)', 'IP': '服务器需要开机后才可以获取', 'Hard disk 1': '60.0 GB'}, 'ubuntu16': {'电源状态': 'poweredOff', 'CPU(内核总数)': 2, '内存(总数MB)': 2048, '系统信息': 'Ubuntu Linux (64-bit)', 'IP': '服务器需要开机后才可以获取', 'Hard disk 1': '40.0 GB'}}}}
+'''

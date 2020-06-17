@@ -2,10 +2,8 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter.simpledialog import askinteger
 
-from Vcenter import Vcenter
 from tkinter import *
-from Vcenter import Vcenter
-from Vcenter import Vcenter
+#from Vcenter import Vcenter
 from pyVmomi import vim
 from pyVmomi import vmodl
 # from tools import tasks
@@ -16,8 +14,10 @@ import getpass
 import traceback
 from os import system, path
 
+sys.path.append("API")
+from Vcenter import Vcenter
 
-class GUI:
+class GUI():
     def __init__(self):
         host = "192.168.1.233"
         user = "administrator@vsphere.local"
