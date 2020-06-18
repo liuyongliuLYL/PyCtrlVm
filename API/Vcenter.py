@@ -30,22 +30,9 @@ class Vcenter():
         # disconnect this thing
         atexit.register(Disconnect, self.si)
         self.content = self.si.RetrieveContent()
-
-        self.all_conf = dict()
-        self.all_conf = {
-            'vm1': {
-                'cup_num': 2,
-                'memory': 2048,
-                'vm_ip': '192.168.1.125',
-                'vm_subnetmask': '255.255.255.0',
-                'vm_gateway': '192.168.1.1',
-                'vm_dns': '114.114.114.114',
-                'vm_domain': 'localhost',
-                'vm_hostname': 'ubuntu16'
-            }
-        }
         print("连接Vcenter服务器")
 
+    # 查询任务状态
     def wait_for_task(self, task):
         """ wait for a vCenter task to finish """
         if task.info.state == 'success':
@@ -74,7 +61,6 @@ class Vcenter():
             else:
                 obj = c
                 break
-
         return obj
 
     # 关闭ESXI服务器, name是ESXI服务器的ip
@@ -179,7 +165,7 @@ class Vcenter():
 
     # 配置网络！！！
     def get_customspec(self, vm_ip=None, vm_subnetmask=None, vm_gateway=None, vm_dns=None,
-                       vm_domain=None, vm_hostname=None):
+                        vm_domain=None, vm_hostname=None):
         # guest NIC settings  有关dns和域名的配置错误 更改了
         adaptermaps = []
         guest_map = vim.vm.customization.AdapterMapping()
@@ -217,16 +203,14 @@ class Vcenter():
 
     # 克隆虚拟机
     def clone_vm(self,
-                 template, vm_name,
-                 datacenter_name, vm_folder, datastore_name,
-                 cluster_name, resource_pool, power_on, datastorecluster_name,
-                 vm_conf):
+                    template, vm_name,
+                    datacenter_name, vm_folder, datastore_name,
+                    cluster_name, resource_pool, power_on, datastorecluster_name,
+                    vm_conf):
         """
         Clone a VM from a template/VM, datacenter_name, vm_folder, datastore_name
         cluster_name, resource_pool, and power_on are all optional.
         """
-
-
 
         cup_num = vm_conf['cup_num']
         memory = vm_conf['memory']
@@ -294,8 +278,8 @@ class Vcenter():
         # ip配置
         if all([vm_ip, vm_subnetmask, vm_gateway, vm_domain, vm_dns]):
             clonespec.customization = self.get_customspec(vm_ip=vm_ip, vm_subnetmask=vm_subnetmask,
-                                                          vm_gateway=vm_gateway, vm_dns=vm_dns, vm_domain=vm_domain,
-                                                          vm_hostname=vm_hostname)
+                                                            vm_gateway=vm_gateway, vm_dns=vm_dns, vm_domain=vm_domain,
+                                                            vm_hostname=vm_hostname)
 
         vmconf = vim.vm.ConfigSpec()
         if cup_num:
@@ -322,7 +306,6 @@ class Vcenter():
         return True
 
     ''' 虚拟机电源管理 '''
-
     def vm_poweron(self, vm):
         try:
             vm.PowerOn()
@@ -374,8 +357,8 @@ class Vcenter():
                     esxi.summary.hardware.cpuMhz,
                     esxi.summary.hardware.cpuModel)
                 esxi_host[esxi.name]['esxi_info']['处理器使用率'] = '%.1f%%' % (esxi.summary.quickStats.overallCpuUsage /
-                                                                          (
-                                                                                  esxi.summary.hardware.numCpuPkgs * esxi.summary.hardware.numCpuCores * esxi.summary.hardware.cpuMhz) * 100)
+                                                                            (
+                                                                                    esxi.summary.hardware.numCpuPkgs * esxi.summary.hardware.numCpuCores * esxi.summary.hardware.cpuMhz) * 100)
                 esxi_host[esxi.name]['esxi_info']['内存(MB)'] = esxi.summary.hardware.memorySize / 1024 / 1024
                 esxi_host[esxi.name]['esxi_info']['可用内存(MB)'] = '%.1f MB' % (
                         (esxi.summary.hardware.memorySize / 1024 / 1024) - esxi.summary.quickStats.overallMemoryUsage)
