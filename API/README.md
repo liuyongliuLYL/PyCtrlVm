@@ -6,3 +6,5 @@ API功能测试
 
 ## Vcenter.py
 Vcenter管理程序API
+
+测试
